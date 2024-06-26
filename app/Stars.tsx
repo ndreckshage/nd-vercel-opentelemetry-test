@@ -1,4 +1,5 @@
 import { trace } from "@opentelemetry/api";
+import { ClientSpy } from "./ClientSpy";
 
 const wait = (ms: number) => new Promise((res) => setTimeout(res, ms));
 
@@ -37,21 +38,32 @@ export default async function Stars({
     .getTracer("nextjs-example")
     .startActiveSpan(`RSC.StarsComponent:${repo}`, async (span) => {
       const stars = await fetchGithubStars(repo, delay);
-      await fetchGithubStars(repo, delay);
+
+      const spanId = span._spanContext.spanId;
+      globalThis.__clientRenderSpyCallbacks =
+        globalThis.__clientRenderSpyCallbacks || {};
+
+      globalThis.__clientRenderSpyCallbacks[spanId] = () => {
+        console.log("callback hit");
+        delete globalThis.__clientRenderSpyCallbacks[spanId];
+        span.end();
+      };
 
       const element = (
-        <div style={{ border: "1px solid #eee", margin: 5, padding: 5 }}>
-          {Array.from(Array(repeat + 1).keys())
-            .reverse()
-            .map((ndx) => (
-              <p key={ndx}>
-                {ndx} - {repo} has {stars} ⭐️
-              </p>
-            ))}
-        </div>
+        <>
+          <div style={{ border: "1px solid #eee", margin: 5, padding: 5 }}>
+            {Array.from(Array(repeat + 1).keys())
+              .reverse()
+              .map((ndx) => (
+                <p key={ndx}>
+                  {ndx} - {repo} has {stars} ⭐️
+                </p>
+              ))}
+          </div>
+          <ClientSpy spanId={spanId} />
+        </>
       );
 
-      span.end();
       return element;
     });
 }

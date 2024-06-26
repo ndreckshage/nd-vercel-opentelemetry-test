@@ -1,8 +1,8 @@
 import { Suspense } from "react";
 import Stars from "./Stars";
 
-const repeat = 25000;
-const delayInterval = 0;
+const repeat = 100000;
+const delayInterval = 100;
 
 export default function Home() {
   return (
