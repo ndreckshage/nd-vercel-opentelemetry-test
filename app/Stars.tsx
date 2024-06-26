@@ -25,7 +25,33 @@ async function fetchGithubStars(repo: string, delay: number) {
     });
 }
 
-export default async function Stars({
+function Stars({
+  stars,
+  repo,
+  delay,
+  repeat,
+}: {
+  stars: number;
+  repo: string;
+  delay: number;
+  repeat: number;
+}) {
+  const element = (
+    <div style={{ border: "1px solid #eee", margin: 5, padding: 5 }}>
+      {Array.from(Array(repeat + 1).keys())
+        .reverse()
+        .map((ndx) => (
+          <p key={ndx}>
+            {ndx} - {repo} has {stars} ⭐️
+          </p>
+        ))}
+    </div>
+  );
+
+  return element;
+}
+
+export default async function StarsWrapper({
   repo,
   delay,
   repeat,
@@ -44,26 +70,15 @@ export default async function Stars({
         globalThis.__clientRenderSpyCallbacks || {};
 
       globalThis.__clientRenderSpyCallbacks[spanId] = () => {
-        console.log("callback hit");
         delete globalThis.__clientRenderSpyCallbacks[spanId];
         span.end();
       };
 
-      const element = (
+      return (
         <>
-          <div style={{ border: "1px solid #eee", margin: 5, padding: 5 }}>
-            {Array.from(Array(repeat + 1).keys())
-              .reverse()
-              .map((ndx) => (
-                <p key={ndx}>
-                  {ndx} - {repo} has {stars} ⭐️
-                </p>
-              ))}
-          </div>
+          <Stars stars={stars} repo={repo} delay={delay} repeat={repeat} />
           <ClientSpy spanId={spanId} />
         </>
       );
-
-      return element;
     });
 }
